@@ -3,20 +3,13 @@
 Ethereum JSON-RPC multi-transport client.
 Rust implementation of Web3.js library.
 
-[![Build Status][travis-image]][travis-url]
-
-[travis-image]: https://travis-ci.org/tomusdrw/rust-web3.svg?branch=master
-[travis-url]: https://travis-ci.org/tomusdrw/rust-web3
-
-[Documentation](http://tomusdrw.github.io/rust-web3/index.html)
-
 ## Usage
 
 First, add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-web3 = { git = "https://github.com/tomusdrw/rust-web3" }
+web3 = { git = "https://github.com/bidzyyys/rust-web3" }
 ```
 
 Next, add this to your crate:

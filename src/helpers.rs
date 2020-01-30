@@ -37,7 +37,9 @@ where
 
     fn poll(&mut self) -> Poll<T, Error> {
         match self.inner.poll() {
-            Ok(Async::Ready(x)) => serde_json::from_value(x).map(Async::Ready).map_err(Into::into),
+            Ok(Async::Ready(x)) => serde_json::from_value(x)
+                .map(Async::Ready)
+                .map_err(Into::into),
             Ok(Async::NotReady) => Ok(Async::NotReady),
             Err(e) => Err(e),
         }
@@ -75,7 +77,9 @@ pub fn to_notification_from_slice(notification: &[u8]) -> Result<rpc::Notificati
 }
 
 /// Parse a Vec of `rpc::Output` into `Result`.
-pub fn to_results_from_outputs(outputs: Vec<rpc::Output>) -> Result<Vec<Result<rpc::Value, Error>>, Error> {
+pub fn to_results_from_outputs(
+    outputs: Vec<rpc::Output>,
+) -> Result<Vec<Result<rpc::Value, Error>>, Error> {
     Ok(outputs.into_iter().map(to_result_from_output).collect())
 }
 
@@ -139,9 +143,17 @@ pub mod tests {
             let idx = self.asserted;
             self.asserted += 1;
 
-            let (m, p) = self.requests.borrow().get(idx).expect("Expected result.").clone();
+            let (m, p) = self
+                .requests
+                .borrow()
+                .get(idx)
+                .expect("Expected result.")
+                .clone();
             assert_eq!(&m, method);
-            let p: Vec<String> = p.into_iter().map(|p| serde_json::to_string(&p).unwrap()).collect();
+            let p: Vec<String> = p
+                .into_iter()
+                .map(|p| serde_json::to_string(&p).unwrap())
+                .collect();
             assert_eq!(p, params);
         }
 

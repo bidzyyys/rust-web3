@@ -273,8 +273,7 @@ pub enum RewardType {
 mod tests {
     use super::*;
 
-    const EXAMPLE_TRACE_CALL: &'static str =
-    r#"{
+    const EXAMPLE_TRACE_CALL: &'static str = r#"{
         "action": {
             "callType": "call",
             "from": "0xd1220a0cf47c7b9be7a2e6ba89f429762e7b9adb",
@@ -296,8 +295,7 @@ mod tests {
         "type": "call"
     }"#;
 
-    const EXAMPLE_TRACE_CREATE: &'static str =
-    r#"{
+    const EXAMPLE_TRACE_CREATE: &'static str = r#"{
         "action": {
             "from": "0xd1220a0cf47c7b9be7a2e6ba89f429762e7b9adb",
             "gas": "0x63ab9",

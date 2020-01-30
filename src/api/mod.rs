@@ -107,7 +107,13 @@ impl<T: Transport> Web3<T> {
         F: IntoFuture<Item = Option<U256>, Error = Error>,
         V: confirm::ConfirmationCheck<Check = F>,
     {
-        confirm::wait_for_confirmations(self.eth(), self.eth_filter(), poll_interval, confirmations, check)
+        confirm::wait_for_confirmations(
+            self.eth(),
+            self.eth_filter(),
+            poll_interval,
+            confirmations,
+            check,
+        )
     }
 
     /// Sends transaction and returns future resolved after transaction is confirmed
@@ -117,7 +123,12 @@ impl<T: Transport> Web3<T> {
         poll_interval: Duration,
         confirmations: usize,
     ) -> confirm::SendTransactionWithConfirmation<T> {
-        confirm::send_transaction_with_confirmation(self.transport.clone(), tx, poll_interval, confirmations)
+        confirm::send_transaction_with_confirmation(
+            self.transport.clone(),
+            tx,
+            poll_interval,
+            confirmations,
+        )
     }
 
     /// Sends raw transaction and returns future resolved after transaction is confirmed
@@ -127,7 +138,12 @@ impl<T: Transport> Web3<T> {
         poll_interval: Duration,
         confirmations: usize,
     ) -> confirm::SendTransactionWithConfirmation<T> {
-        confirm::send_raw_transaction_with_confirmation(self.transport.clone(), tx, poll_interval, confirmations)
+        confirm::send_raw_transaction_with_confirmation(
+            self.transport.clone(),
+            tx,
+            poll_interval,
+            confirmations,
+        )
     }
 }
 

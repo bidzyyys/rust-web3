@@ -28,7 +28,12 @@ fn main() {
         }))
         .execute(
             bytecode,
-            (U256::from(1_000_000), "My Token".to_owned(), 3u64, "MT".to_owned()),
+            (
+                U256::from(1_000_000),
+                "My Token".to_owned(),
+                3u64,
+                "MT".to_owned(),
+            ),
             my_account,
         )
         .expect("Correct parameters are passed to the constructor.")

@@ -3,8 +3,9 @@
 use crate::api::Namespace;
 use crate::helpers::{self, CallFuture};
 use crate::types::{
-    Address, Block, BlockId, BlockNumber, Bytes, CallRequest, Filter, Index, Log, SyncState, Transaction,
-    TransactionId, TransactionReceipt, TransactionRequest, Work, H256, H520, H64, U256,
+    Address, Block, BlockId, BlockNumber, Bytes, CallRequest, Filter, Index, Log, SyncState,
+    Transaction, TransactionId, TransactionReceipt, TransactionRequest, Work, H256, H520, H64,
+    U256,
 };
 use crate::Transport;
 
@@ -70,7 +71,11 @@ impl<T: Transport> Eth<T> {
     }
 
     /// Call a contract without changing the state of the blockchain to estimate gas usage.
-    pub fn estimate_gas(&self, req: CallRequest, block: Option<BlockNumber>) -> CallFuture<U256, T::Out> {
+    pub fn estimate_gas(
+        &self,
+        req: CallRequest,
+        block: Option<BlockNumber>,
+    ) -> CallFuture<U256, T::Out> {
         let req = helpers::serialize(&req);
         let block = helpers::serialize(&block.unwrap_or(BlockNumber::Latest));
 
@@ -83,11 +88,18 @@ impl<T: Transport> Eth<T> {
     }
 
     /// Get balance of given address
-    pub fn balance(&self, address: Address, block: Option<BlockNumber>) -> CallFuture<U256, T::Out> {
+    pub fn balance(
+        &self,
+        address: Address,
+        block: Option<BlockNumber>,
+    ) -> CallFuture<U256, T::Out> {
         let address = helpers::serialize(&address);
         let block = helpers::serialize(&block.unwrap_or(BlockNumber::Latest));
 
-        CallFuture::new(self.transport.execute("eth_getBalance", vec![address, block]))
+        CallFuture::new(
+            self.transport
+                .execute("eth_getBalance", vec![address, block]),
+        )
     }
 
     /// Get all logs matching a given filter object
@@ -103,11 +115,13 @@ impl<T: Transport> Eth<T> {
         let result = match block {
             BlockId::Hash(hash) => {
                 let hash = helpers::serialize(&hash);
-                self.transport.execute("eth_getBlockByHash", vec![hash, include_txs])
+                self.transport
+                    .execute("eth_getBlockByHash", vec![hash, include_txs])
             }
             BlockId::Number(num) => {
                 let num = helpers::serialize(&num);
-                self.transport.execute("eth_getBlockByNumber", vec![num, include_txs])
+                self.transport
+                    .execute("eth_getBlockByNumber", vec![num, include_txs])
             }
         };
 
@@ -121,11 +135,13 @@ impl<T: Transport> Eth<T> {
         let result = match block {
             BlockId::Hash(hash) => {
                 let hash = helpers::serialize(&hash);
-                self.transport.execute("eth_getBlockByHash", vec![hash, include_txs])
+                self.transport
+                    .execute("eth_getBlockByHash", vec![hash, include_txs])
             }
             BlockId::Number(num) => {
                 let num = helpers::serialize(&num);
-                self.transport.execute("eth_getBlockByNumber", vec![num, include_txs])
+                self.transport
+                    .execute("eth_getBlockByNumber", vec![num, include_txs])
             }
         };
 
@@ -137,7 +153,8 @@ impl<T: Transport> Eth<T> {
         let result = match block {
             BlockId::Hash(hash) => {
                 let hash = helpers::serialize(&hash);
-                self.transport.execute("eth_getBlockTransactionCountByHash", vec![hash])
+                self.transport
+                    .execute("eth_getBlockTransactionCountByHash", vec![hash])
             }
             BlockId::Number(num) => {
                 let num = helpers::serialize(&num);
@@ -163,20 +180,35 @@ impl<T: Transport> Eth<T> {
     }
 
     /// Get storage entry
-    pub fn storage(&self, address: Address, idx: U256, block: Option<BlockNumber>) -> CallFuture<H256, T::Out> {
+    pub fn storage(
+        &self,
+        address: Address,
+        idx: U256,
+        block: Option<BlockNumber>,
+    ) -> CallFuture<H256, T::Out> {
         let address = helpers::serialize(&address);
         let idx = helpers::serialize(&idx);
         let block = helpers::serialize(&block.unwrap_or(BlockNumber::Latest));
 
-        CallFuture::new(self.transport.execute("eth_getStorageAt", vec![address, idx, block]))
+        CallFuture::new(
+            self.transport
+                .execute("eth_getStorageAt", vec![address, idx, block]),
+        )
     }
 
     /// Get nonce
-    pub fn transaction_count(&self, address: Address, block: Option<BlockNumber>) -> CallFuture<U256, T::Out> {
+    pub fn transaction_count(
+        &self,
+        address: Address,
+        block: Option<BlockNumber>,
+    ) -> CallFuture<U256, T::Out> {
         let address = helpers::serialize(&address);
         let block = helpers::serialize(&block.unwrap_or(BlockNumber::Latest));
 
-        CallFuture::new(self.transport.execute("eth_getTransactionCount", vec![address, block]))
+        CallFuture::new(
+            self.transport
+                .execute("eth_getTransactionCount", vec![address, block]),
+        )
     }
 
     /// Get transaction
@@ -184,7 +216,8 @@ impl<T: Transport> Eth<T> {
         let result = match id {
             TransactionId::Hash(hash) => {
                 let hash = helpers::serialize(&hash);
-                self.transport.execute("eth_getTransactionByHash", vec![hash])
+                self.transport
+                    .execute("eth_getTransactionByHash", vec![hash])
             }
             TransactionId::Block(BlockId::Hash(hash), index) => {
                 let hash = helpers::serialize(&hash);
@@ -204,10 +237,16 @@ impl<T: Transport> Eth<T> {
     }
 
     /// Get transaction receipt
-    pub fn transaction_receipt(&self, hash: H256) -> CallFuture<Option<TransactionReceipt>, T::Out> {
+    pub fn transaction_receipt(
+        &self,
+        hash: H256,
+    ) -> CallFuture<Option<TransactionReceipt>, T::Out> {
         let hash = helpers::serialize(&hash);
 
-        CallFuture::new(self.transport.execute("eth_getTransactionReceipt", vec![hash]))
+        CallFuture::new(
+            self.transport
+                .execute("eth_getTransactionReceipt", vec![hash]),
+        )
     }
 
     /// Get uncle by block ID and uncle index -- transactions only has hashes.
@@ -235,11 +274,13 @@ impl<T: Transport> Eth<T> {
         let result = match block {
             BlockId::Hash(hash) => {
                 let hash = helpers::serialize(&hash);
-                self.transport.execute("eth_getUncleCountByBlockHash", vec![hash])
+                self.transport
+                    .execute("eth_getUncleCountByBlockHash", vec![hash])
             }
             BlockId::Number(num) => {
                 let num = helpers::serialize(&num);
-                self.transport.execute("eth_getUncleCountByBlockNumber", vec![num])
+                self.transport
+                    .execute("eth_getUncleCountByBlockNumber", vec![num])
             }
         };
 
@@ -268,7 +309,10 @@ impl<T: Transport> Eth<T> {
 
     /// Start new pending transaction filter
     pub fn new_pending_transaction_filter(&self) -> CallFuture<U256, T::Out> {
-        CallFuture::new(self.transport.execute("eth_newPendingTransactionFilter", vec![]))
+        CallFuture::new(
+            self.transport
+                .execute("eth_newPendingTransactionFilter", vec![]),
+        )
     }
 
     /// Start new pending transaction filter
@@ -303,7 +347,12 @@ impl<T: Transport> Eth<T> {
     }
 
     /// Submit work of external miner
-    pub fn submit_work(&self, nonce: H64, pow_hash: H256, mix_hash: H256) -> CallFuture<bool, T::Out> {
+    pub fn submit_work(
+        &self,
+        nonce: H64,
+        pow_hash: H256,
+        mix_hash: H256,
+    ) -> CallFuture<bool, T::Out> {
         let nonce = helpers::serialize(&nonce);
         let pow_hash = helpers::serialize(&pow_hash);
         let mix_hash = helpers::serialize(&mix_hash);
@@ -327,8 +376,9 @@ mod tests {
     use crate::api::Namespace;
     use crate::rpc::Value;
     use crate::types::{
-        Address, Block, BlockId, BlockNumber, Bytes, CallRequest, FilterBuilder, Log, SyncInfo, SyncState, Transaction,
-        TransactionId, TransactionReceipt, TransactionRequest, Work, H256, H520, H64,
+        Address, Block, BlockId, BlockNumber, Bytes, CallRequest, FilterBuilder, Log, SyncInfo,
+        SyncState, Transaction, TransactionId, TransactionReceipt, TransactionRequest, Work, H256,
+        H520, H64,
     };
 
     use super::Eth;

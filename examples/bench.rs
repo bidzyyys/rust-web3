@@ -45,7 +45,10 @@ impl Ticker {
         let elapsed = as_millis(time.elapsed());
         let result = reqs * 1_000 / elapsed;
 
-        println!("[{}] {} reqs/s ({} reqs in {} ms)", self.id, result, reqs, elapsed);
+        println!(
+            "[{}] {} reqs/s ({} reqs in {} ms)",
+            self.id, result, reqs, elapsed
+        );
 
         self.reqs.store(0, atomic::Ordering::Release);
         *time = time::Instant::now();
@@ -68,8 +71,12 @@ fn main() {
     bench(" ipc", eloop, http, requests);
 }
 
-fn bench<T: web3::Transport>(id: &str, eloop: web3::transports::EventLoopHandle, transport: T, max: usize)
-where
+fn bench<T: web3::Transport>(
+    id: &str,
+    eloop: web3::transports::EventLoopHandle,
+    transport: T,
+    max: usize,
+) where
     T::Out: Send + 'static,
 {
     let web3 = web3::Web3::new(transport);

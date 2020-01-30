@@ -90,11 +90,16 @@ impl Http {
     }
 
     /// Create new HTTP transport with given URL and existing event loop handle.
-    pub fn with_event_loop(url: &str, handle: &reactor::Handle, max_parallel: usize) -> Result<Self> {
+    pub fn with_event_loop(
+        url: &str,
+        handle: &reactor::Handle,
+        max_parallel: usize,
+    ) -> Result<Self> {
         let (write_sender, write_receiver) = mpsc::unbounded();
 
         #[cfg(feature = "tls")]
-        let client = hyper::Client::builder().build::<_, hyper::Body>(hyper_tls::HttpsConnector::new(4)?);
+        let client =
+            hyper::Client::builder().build::<_, hyper::Body>(hyper_tls::HttpsConnector::new(4)?);
 
         #[cfg(not(feature = "tls"))]
         let client = hyper::Client::new();
@@ -102,16 +107,20 @@ impl Http {
         handle.spawn(
             write_receiver
                 .map(move |(request, tx): (_, Pending)| {
-                    client.request(request).then(move |response| Ok((response, tx)))
+                    client
+                        .request(request)
+                        .then(move |response| Ok((response, tx)))
                 })
                 .buffer_unordered(max_parallel)
                 .for_each(|(response, tx)| {
                     use futures::future::Either::{A, B};
                     let future = match response {
-                        Ok(ref res) if !res.status().is_success() => A(future::err(Error::Transport(format!(
-                            "Unexpected response status code: {}",
-                            res.status()
-                        )))),
+                        Ok(ref res) if !res.status().is_success() => {
+                            A(future::err(Error::Transport(format!(
+                                "Unexpected response status code: {}",
+                                res.status()
+                            ))))
+                        }
                         Ok(res) => B(res.into_body().concat2().map_err(Into::into)),
                         Err(err) => A(future::err(err.into())),
                     };
@@ -133,7 +142,10 @@ impl Http {
                     Some(pass) => format!("{}:{}", user, pass),
                     None => format!("{}:", user),
                 };
-                Some(HeaderValue::from_str(&format!("Basic {}", base64::encode(&auth)))?)
+                Some(HeaderValue::from_str(&format!(
+                    "Basic {}",
+                    base64::encode(&auth)
+                ))?)
             } else {
                 None
             }
@@ -161,12 +173,15 @@ impl Http {
             hyper::header::CONTENT_TYPE,
             HeaderValue::from_static("application/json"),
         );
-        req.headers_mut()
-            .insert(hyper::header::USER_AGENT, HeaderValue::from_static("web3.rs"));
+        req.headers_mut().insert(
+            hyper::header::USER_AGENT,
+            HeaderValue::from_static("web3.rs"),
+        );
 
         // Don't send chunked request
         if len < MAX_SINGLE_CHUNK {
-            req.headers_mut().insert(hyper::header::CONTENT_LENGTH, len.into());
+            req.headers_mut()
+                .insert(hyper::header::CONTENT_LENGTH, len.into());
         }
         // Send basic auth header
         if let Some(ref basic_auth) = self.basic_auth {
@@ -206,7 +221,10 @@ impl BatchTransport for Http {
         T: IntoIterator<Item = (RequestId, rpc::Call)>,
     {
         let mut it = requests.into_iter();
-        let (id, first) = it.next().map(|x| (x.0, Some(x.1))).unwrap_or_else(|| (0, None));
+        let (id, first) = it
+            .next()
+            .map(|x| (x.0, Some(x.1)))
+            .unwrap_or_else(|| (0, None));
         let requests = first.into_iter().chain(it.map(|x| x.1)).collect();
 
         self.send_request(id, rpc::Request::Batch(requests), batch_response)
@@ -215,7 +233,8 @@ impl BatchTransport for Http {
 
 /// Parse bytes RPC response into `Result`.
 fn single_response<T: Deref<Target = [u8]>>(response: T) -> Result<rpc::Value> {
-    let response = serde_json::from_slice(&*response).map_err(|e| Error::InvalidResponse(format!("{:?}", e)))?;
+    let response = serde_json::from_slice(&*response)
+        .map_err(|e| Error::InvalidResponse(format!("{:?}", e)))?;
 
     match response {
         rpc::Response::Single(output) => helpers::to_result_from_output(output),
@@ -225,10 +244,14 @@ fn single_response<T: Deref<Target = [u8]>>(response: T) -> Result<rpc::Value> {
 
 /// Parse bytes RPC batch response into `Result`.
 fn batch_response<T: Deref<Target = [u8]>>(response: T) -> Result<Vec<Result<rpc::Value>>> {
-    let response = serde_json::from_slice(&*response).map_err(|e| Error::InvalidResponse(format!("{:?}", e)))?;
+    let response = serde_json::from_slice(&*response)
+        .map_err(|e| Error::InvalidResponse(format!("{:?}", e)))?;
 
     match response {
-        rpc::Response::Batch(outputs) => Ok(outputs.into_iter().map(helpers::to_result_from_output).collect()),
+        rpc::Response::Batch(outputs) => Ok(outputs
+            .into_iter()
+            .map(helpers::to_result_from_output)
+            .collect()),
         _ => Err(Error::InvalidResponse("Expected batch, got single.".into())),
     }
 }

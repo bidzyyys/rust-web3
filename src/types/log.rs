@@ -272,7 +272,9 @@ mod tests {
     fn does_topic_filter_set_topics_correctly() {
         let topic_filter = ethabi::TopicFilter {
             topic0: ethabi::Topic::This(H256::from_low_u64_be(3)),
-            topic1: ethabi::Topic::OneOf(vec![5, 8].into_iter().map(H256::from_low_u64_be).collect()),
+            topic1: ethabi::Topic::OneOf(
+                vec![5, 8].into_iter().map(H256::from_low_u64_be).collect(),
+            ),
             topic2: ethabi::Topic::This(H256::from_low_u64_be(13)),
             topic3: ethabi::Topic::Any,
         };

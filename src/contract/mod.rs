@@ -5,7 +5,9 @@ use ethabi;
 use crate::api::{Eth, Namespace};
 use crate::confirm;
 use crate::contract::tokens::{Detokenize, Tokenize};
-use crate::types::{Address, BlockNumber, Bytes, CallRequest, TransactionCondition, TransactionRequest, H256, U256};
+use crate::types::{
+    Address, BlockNumber, Bytes, CallRequest, TransactionCondition, TransactionRequest, H256, U256,
+};
 use crate::Transport;
 use std::{collections::HashMap, hash::Hash, time};
 
@@ -76,7 +78,10 @@ impl<T: Transport> Contract<T> {
         S: AsRef<str> + Eq + Hash,
     {
         let abi = ethabi::Contract::load(json)?;
-        let linker: HashMap<String, Address> = linker.into_iter().map(|(s, a)| (s.as_ref().to_string(), a)).collect();
+        let linker: HashMap<String, Address> = linker
+            .into_iter()
+            .map(|(s, a)| (s.as_ref().to_string(), a))
+            .collect();
         Ok(deploy::Builder {
             eth,
             abi,
@@ -105,8 +110,23 @@ impl<T: Transport> Contract<T> {
         self.address
     }
 
+    /// Encode ABI
+    pub fn encode<P>(&self, func: &str, params: P) -> Result<Vec<u8>, ethabi::Error>
+    where
+        P: Tokenize,
+    {
+        self.abi
+            .function(func)
+            .and_then(|function| function.encode_input(&params.into_tokens()))
+    }
     /// Execute a contract function
-    pub fn call<P>(&self, func: &str, params: P, from: Address, options: Options) -> CallFuture<H256, T::Out>
+    pub fn call<P>(
+        &self,
+        func: &str,
+        params: P,
+        from: Address,
+        options: Options,
+    ) -> CallFuture<H256, T::Out>
     where
         P: Tokenize,
     {
@@ -185,7 +205,13 @@ impl<T: Transport> Contract<T> {
     }
 
     /// Estimate gas required for this function call.
-    pub fn estimate_gas<P>(&self, func: &str, params: P, from: Address, options: Options) -> CallFuture<U256, T::Out>
+    pub fn estimate_gas<P>(
+        &self,
+        func: &str,
+        params: P,
+        from: Address,
+        options: Options,
+    ) -> CallFuture<U256, T::Out>
     where
         P: Tokenize,
     {
@@ -262,7 +288,12 @@ mod tests {
 
     fn contract<T: Transport>(transport: &T) -> Contract<&T> {
         let eth = api::Eth::new(transport);
-        Contract::from_json(eth, Address::from_low_u64_be(1), include_bytes!("./res/token.json")).unwrap()
+        Contract::from_json(
+            eth,
+            Address::from_low_u64_be(1),
+            include_bytes!("./res/token.json"),
+        )
+        .unwrap()
     }
 
     #[test]
@@ -285,7 +316,8 @@ mod tests {
         transport.assert_request(
             "eth_call",
             &[
-                "{\"data\":\"0x06fdde03\",\"to\":\"0x0000000000000000000000000000000000000001\"}".into(),
+                "{\"data\":\"0x06fdde03\",\"to\":\"0x0000000000000000000000000000000000000001\"}"
+                    .into(),
                 "\"0x1\"".into(),
             ],
         );
@@ -327,7 +359,10 @@ mod tests {
     fn should_call_a_contract_function() {
         // given
         let mut transport = TestTransport::default();
-        transport.set_response(rpc::Value::String(format!("{:?}", H256::from_low_u64_be(5))));
+        transport.set_response(rpc::Value::String(format!(
+            "{:?}",
+            H256::from_low_u64_be(5)
+        )));
 
         let result = {
             let token = contract(&transport);
@@ -380,7 +415,13 @@ mod tests {
 
             // when
             token
-                .query("balanceOf", Address::from_low_u64_be(5), None, Options::default(), None)
+                .query(
+                    "balanceOf",
+                    Address::from_low_u64_be(5),
+                    None,
+                    Options::default(),
+                    None,
+                )
                 .wait()
                 .unwrap()
         };

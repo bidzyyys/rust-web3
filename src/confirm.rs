@@ -61,15 +61,22 @@ where
             let next_state = match self.state {
                 WaitForConfirmationsState::WaitForNextBlock => {
                     let _ = try_ready!(self.filter_stream.poll());
-                    WaitForConfirmationsState::CheckConfirmation(self.confirmation_check.check().into_future())
+                    WaitForConfirmationsState::CheckConfirmation(
+                        self.confirmation_check.check().into_future(),
+                    )
                 }
-                WaitForConfirmationsState::CheckConfirmation(ref mut future) => match try_ready!(future.poll()) {
-                    Some(confirmation_block_number) => {
-                        let future = self.eth.block_number();
-                        WaitForConfirmationsState::CompareConfirmations(confirmation_block_number.low_u64(), future)
+                WaitForConfirmationsState::CheckConfirmation(ref mut future) => {
+                    match try_ready!(future.poll()) {
+                        Some(confirmation_block_number) => {
+                            let future = self.eth.block_number();
+                            WaitForConfirmationsState::CompareConfirmations(
+                                confirmation_block_number.low_u64(),
+                                future,
+                            )
+                        }
+                        None => WaitForConfirmationsState::WaitForNextBlock,
                     }
-                    None => WaitForConfirmationsState::WaitForNextBlock,
-                },
+                }
                 WaitForConfirmationsState::CompareConfirmations(
                     confirmation_block_number,
                     ref mut block_number_future,
@@ -106,7 +113,13 @@ pub struct Confirmations<T: Transport, V, F> {
 }
 
 impl<T: Transport, V, F> Confirmations<T, V, F> {
-    fn new(eth: Eth<T>, eth_filter: EthFilter<T>, poll_interval: Duration, confirmations: usize, check: V) -> Self {
+    fn new(
+        eth: Eth<T>,
+        eth_filter: EthFilter<T>,
+        poll_interval: Duration,
+        confirmations: usize,
+        check: V,
+    ) -> Self {
         Confirmations {
             state: ConfirmationsState::Create(CreateWaitForConfirmations {
                 eth: Some(eth),
@@ -136,7 +149,9 @@ where
                     let future = WaitForConfirmations {
                         eth: create.eth.take().expect("future polled after ready; qed"),
                         state: WaitForConfirmationsState::WaitForNextBlock,
-                        filter_stream: filter.stream(create.poll_interval).skip(create.confirmations as u64),
+                        filter_stream: filter
+                            .stream(create.poll_interval)
+                            .skip(create.confirmations as u64),
                         confirmation_check: create
                             .confirmation_check
                             .take()
@@ -222,9 +237,16 @@ pub struct SendTransactionWithConfirmation<T: Transport> {
 }
 
 impl<T: Transport> SendTransactionWithConfirmation<T> {
-    fn new(transport: T, tx: TransactionRequest, poll_interval: Duration, confirmations: usize) -> Self {
+    fn new(
+        transport: T,
+        tx: TransactionRequest,
+        poll_interval: Duration,
+        confirmations: usize,
+    ) -> Self {
         SendTransactionWithConfirmation {
-            state: SendTransactionWithConfirmationState::SendTransaction(Eth::new(&transport).send_transaction(tx)),
+            state: SendTransactionWithConfirmationState::SendTransaction(
+                Eth::new(&transport).send_transaction(tx),
+            ),
             transport,
             poll_interval,
             confirmations,
@@ -233,7 +255,9 @@ impl<T: Transport> SendTransactionWithConfirmation<T> {
 
     fn raw(transport: T, tx: Bytes, poll_interval: Duration, confirmations: usize) -> Self {
         SendTransactionWithConfirmation {
-            state: SendTransactionWithConfirmationState::SendTransaction(Eth::new(&transport).send_raw_transaction(tx)),
+            state: SendTransactionWithConfirmationState::SendTransaction(
+                Eth::new(&transport).send_raw_transaction(tx),
+            ),
             transport,
             poll_interval,
             confirmations,
@@ -265,8 +289,10 @@ impl<T: Transport> Future for SendTransactionWithConfirmation<T> {
                 SendTransactionWithConfirmationState::SendTransaction(ref mut future) => {
                     let hash = try_ready!(future.poll());
                     if self.confirmations > 0 {
-                        let confirmation_check =
-                            TransactionReceiptBlockNumberCheck::new(Eth::new(self.transport.clone()), hash);
+                        let confirmation_check = TransactionReceiptBlockNumberCheck::new(
+                            Eth::new(self.transport.clone()),
+                            hash,
+                        );
                         let eth = Eth::new(self.transport.clone());
                         let eth_filter = EthFilter::new(self.transport.clone());
                         let wait = wait_for_confirmations(
@@ -282,7 +308,10 @@ impl<T: Transport> Future for SendTransactionWithConfirmation<T> {
                         SendTransactionWithConfirmationState::GetTransactionReceipt(receipt_future)
                     }
                 }
-                SendTransactionWithConfirmationState::WaitForConfirmations(hash, ref mut future) => {
+                SendTransactionWithConfirmationState::WaitForConfirmations(
+                    hash,
+                    ref mut future,
+                ) => {
                     let _confirmed = try_ready!(Future::poll(future));
                     let receipt_future = Eth::new(&self.transport).transaction_receipt(hash);
                     SendTransactionWithConfirmationState::GetTransactionReceipt(receipt_future)
@@ -368,8 +397,12 @@ mod tests {
         ));
         transport.add_response(Value::String("0x123".into()));
         transport.add_response(Value::Array(vec![
-            Value::String(r#"0x0000000000000000000000000000000000000000000000000000000000000456"#.into()),
-            Value::String(r#"0x0000000000000000000000000000000000000000000000000000000000000457"#.into()),
+            Value::String(
+                r#"0x0000000000000000000000000000000000000000000000000000000000000456"#.into(),
+            ),
+            Value::String(
+                r#"0x0000000000000000000000000000000000000000000000000000000000000457"#.into(),
+            ),
         ]));
         transport.add_response(Value::Array(vec![Value::String(
             r#"0x0000000000000000000000000000000000000000000000000000000000000458"#.into(),
@@ -379,8 +412,12 @@ mod tests {
         )]));
         transport.add_response(Value::Null);
         transport.add_response(Value::Array(vec![
-            Value::String(r#"0x0000000000000000000000000000000000000000000000000000000000000460"#.into()),
-            Value::String(r#"0x0000000000000000000000000000000000000000000000000000000000000461"#.into()),
+            Value::String(
+                r#"0x0000000000000000000000000000000000000000000000000000000000000460"#.into(),
+            ),
+            Value::String(
+                r#"0x0000000000000000000000000000000000000000000000000000000000000461"#.into(),
+            ),
         ]));
         transport.add_response(Value::Null);
         transport.add_response(json!(transaction_receipt));
@@ -389,8 +426,12 @@ mod tests {
         transport.add_response(Value::Bool(true));
 
         let confirmation = {
-            let future =
-                send_transaction_with_confirmation(&transport, transaction_request, poll_interval, confirmations);
+            let future = send_transaction_with_confirmation(
+                &transport,
+                transaction_request,
+                poll_interval,
+                confirmations,
+            );
             future.wait()
         };
 

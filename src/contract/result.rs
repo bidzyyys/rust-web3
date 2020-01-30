@@ -83,7 +83,9 @@ where
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         if let ResultType::Decodable(ref mut inner, ref function) = self.inner {
             let bytes: Bytes = try_ready!(inner.poll());
-            return Ok(Async::Ready(T::from_tokens(function.decode_output(&bytes.0)?)?));
+            return Ok(Async::Ready(T::from_tokens(
+                function.decode_output(&bytes.0)?,
+            )?));
         }
 
         match mem::replace(&mut self.inner, ResultType::Done) {

@@ -28,7 +28,9 @@ macro_rules! try_nb {
     ($e:expr) => {
         match $e {
             Ok(t) => t,
-            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => return Ok(futures::Async::NotReady),
+            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                return Ok(futures::Async::NotReady)
+            }
             Err(e) => {
                 log::warn!("Unexpected IO error: {:?}", e);
                 return Err(());
@@ -63,7 +65,9 @@ impl Ipc {
         P: AsRef<Path>,
     {
         let path = path.as_ref().to_owned();
-        EventLoopHandle::spawn(move |handle| Self::with_event_loop(&path, &handle).map_err(Into::into))
+        EventLoopHandle::spawn(move |handle| {
+            Self::with_event_loop(&path, &handle).map_err(Into::into)
+        })
     }
 
     /// Create new IPC transport within existing Event Loop.
@@ -165,7 +169,10 @@ impl BatchTransport for Ipc {
         T: IntoIterator<Item = (RequestId, rpc::Call)>,
     {
         let mut it = requests.into_iter();
-        let (id, first) = it.next().map(|x| (x.0, Some(x.1))).unwrap_or_else(|| (0, None));
+        let (id, first) = it
+            .next()
+            .map(|x| (x.0, Some(x.1)))
+            .unwrap_or_else(|| (0, None));
         let requests = first.into_iter().chain(it.map(|x| x.1)).collect();
         self.send_request(id, rpc::Request::Batch(requests), Ok)
     }
@@ -213,7 +220,10 @@ impl Future for WriteStream {
                     // Ask for more to write
                     let to_send = try_ready!(self.incoming.poll());
                     if let Some(to_send) = to_send {
-                        log::trace!("Got new message to write: {:?}", String::from_utf8_lossy(&to_send));
+                        log::trace!(
+                            "Got new message to write: {:?}",
+                            String::from_utf8_lossy(&to_send)
+                        );
                         WriteState::Writing {
                             buffer: to_send,
                             current_pos: 0,
@@ -277,7 +287,9 @@ impl Future for ReadStream {
 
             let mut min = self.current_pos;
             self.current_pos += read;
-            while let Some((response, len)) = Self::extract_response(&self.buffer[0..self.current_pos], min) {
+            while let Some((response, len)) =
+                Self::extract_response(&self.buffer[0..self.current_pos], min)
+            {
                 // Respond
                 self.respond(response);
 
@@ -356,7 +368,9 @@ impl ReadStream {
                 // Try to deserialize
                 let pos = pos + 1;
                 match helpers::to_response_from_slice(&buf[0..pos]) {
-                    Ok(rpc::Response::Single(output)) => return Some((Message::Rpc(vec![output]), pos)),
+                    Ok(rpc::Response::Single(output)) => {
+                        return Some((Message::Rpc(vec![output]), pos))
+                    }
                     Ok(rpc::Response::Batch(outputs)) => return Some((Message::Rpc(outputs), pos)),
                     // just continue
                     _ => {}
@@ -470,7 +484,10 @@ mod tests {
         // then
         assert_eq!(
             eloop.run(res1.join(res2)),
-            Ok((rpc::Value::String("x".into()), rpc::Value::String("x".into())))
+            Ok((
+                rpc::Value::String("x".into()),
+                rpc::Value::String("x".into())
+            ))
         );
     }
 }

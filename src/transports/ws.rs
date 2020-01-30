@@ -52,7 +52,9 @@ impl WebSocket {
     /// NOTE: Dropping event loop handle will stop the transport layer!
     pub fn new(url: &str) -> Result<(EventLoopHandle, Self)> {
         let url = url.to_owned();
-        EventLoopHandle::spawn(move |handle| Self::with_event_loop(&url, &handle).map_err(Into::into))
+        EventLoopHandle::spawn(move |handle| {
+            Self::with_event_loop(&url, &handle).map_err(Into::into)
+        })
     }
 
     /// Create new WebSocket transport within existing Event Loop.
@@ -190,11 +192,12 @@ impl Transport for WebSocket {
     }
 
     fn send(&self, id: RequestId, request: rpc::Call) -> Self::Out {
-        self.send_request(id, rpc::Request::Single(request), |response| {
-            match response.into_iter().next() {
-                Some(res) => res,
-                None => Err(Error::InvalidResponse("Expected single, got batch.".into())),
-            }
+        self.send_request(id, rpc::Request::Single(request), |response| match response
+            .into_iter()
+            .next()
+        {
+            Some(res) => res,
+            None => Err(Error::InvalidResponse("Expected single, got batch.".into())),
         })
     }
 }
@@ -207,7 +210,10 @@ impl BatchTransport for WebSocket {
         T: IntoIterator<Item = (RequestId, rpc::Call)>,
     {
         let mut it = requests.into_iter();
-        let (id, first) = it.next().map(|x| (x.0, Some(x.1))).unwrap_or_else(|| (0, None));
+        let (id, first) = it
+            .next()
+            .map(|x| (x.0, Some(x.1)))
+            .unwrap_or_else(|| (0, None));
         let requests = first.into_iter().chain(it.map(|x| x.1)).collect();
         self.send_request(id, rpc::Request::Batch(requests), Ok)
     }

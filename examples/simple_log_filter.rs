@@ -9,8 +9,10 @@ use web3::types::FilterBuilder;
 
 fn main() {
     let mut eloop = tokio_core::reactor::Core::new().unwrap();
-    let web3 =
-        web3::Web3::new(web3::transports::Http::with_event_loop("http://localhost:8545", &eloop.handle(), 1).unwrap());
+    let web3 = web3::Web3::new(
+        web3::transports::Http::with_event_loop("http://localhost:8545", &eloop.handle(), 1)
+            .unwrap(),
+    );
 
     // Get the contract bytecode for instance from Solidity compiler
     let bytecode = include_str!("./build/SimpleEvent.bin");
@@ -50,17 +52,22 @@ fn main() {
                         .eth_filter()
                         .create_logs_filter(filter)
                         .then(|filter| {
-                            filter.unwrap().stream(time::Duration::from_secs(0)).for_each(|log| {
-                                println!("got log: {:?}", log);
-                                Ok(())
-                            })
+                            filter
+                                .unwrap()
+                                .stream(time::Duration::from_secs(0))
+                                .for_each(|log| {
+                                    println!("got log: {:?}", log);
+                                    Ok(())
+                                })
                         })
                         .map_err(|_| ());
 
-                    let call_future = contract.call("hello", (), accounts[0], Options::default()).then(|tx| {
-                        println!("got tx: {:?}", tx);
-                        Ok(())
-                    });
+                    let call_future = contract
+                        .call("hello", (), accounts[0], Options::default())
+                        .then(|tx| {
+                            println!("got tx: {:?}", tx);
+                            Ok(())
+                        });
 
                     event_future.join(call_future)
                 })

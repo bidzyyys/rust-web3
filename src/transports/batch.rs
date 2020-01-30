@@ -107,7 +107,9 @@ impl<T: Future<Item = Vec<Result<rpc::Value>>, Error = RpcError>> Future for Bat
                         .enumerate()
                         .filter_map(|(idx, request_id)| {
                             pending.remove(&request_id).map(|rx| match res {
-                                Ok(ref results) if results.len() > idx => rx.send(results[idx].clone()),
+                                Ok(ref results) if results.len() > idx => {
+                                    rx.send(results[idx].clone())
+                                }
                                 Err(ref err) => rx.send(Err(err.clone())),
                                 _ => rx.send(Err(RpcError::Internal)),
                             })

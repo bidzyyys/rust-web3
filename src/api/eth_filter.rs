@@ -52,7 +52,11 @@ impl<T: Transport, I: DeserializeOwned> Stream for FilterStream<T, I> {
                 FilterStreamState::WaitForInterval => {
                     let _ready = try_ready!(self.interval.poll().map_err(|_| Error::Unreachable));
                     let id = helpers::serialize(&self.base.id);
-                    let future = CallFuture::new(self.base.transport.execute("eth_getFilterChanges", vec![id]));
+                    let future = CallFuture::new(
+                        self.base
+                            .transport
+                            .execute("eth_getFilterChanges", vec![id]),
+                    );
                     FilterStreamState::GetFilterChanges(future)
                 }
                 FilterStreamState::GetFilterChanges(ref mut future) => {
@@ -176,7 +180,10 @@ impl<T: Transport> BaseFilter<T, Log> {
 }
 
 /// Should be used to create new filter future
-fn create_filter<T: Transport, F: FilterInterface>(t: T, arg: Vec<rpc::Value>) -> CreateFilter<T, F::Item> {
+fn create_filter<T: Transport, F: FilterInterface>(
+    t: T,
+    arg: Vec<rpc::Value>,
+) -> CreateFilter<T, F::Item> {
     let future = CallFuture::new(t.execute(F::constructor(), arg));
     CreateFilter {
         transport: Some(t),
@@ -204,7 +211,10 @@ where
         let id = try_ready!(self.future.poll());
         let result = BaseFilter {
             id,
-            transport: self.transport.take().expect("future polled after ready; qed"),
+            transport: self
+                .transport
+                .take()
+                .expect("future polled after ready; qed"),
             item: PhantomData,
         };
         Ok(result.into())
@@ -415,8 +425,12 @@ mod tests {
             r#"0x0000000000000000000000000000000000000000000000000000000000000456"#.into(),
         )]));
         transport.add_response(Value::Array(vec![
-            Value::String(r#"0x0000000000000000000000000000000000000000000000000000000000000457"#.into()),
-            Value::String(r#"0x0000000000000000000000000000000000000000000000000000000000000458"#.into()),
+            Value::String(
+                r#"0x0000000000000000000000000000000000000000000000000000000000000457"#.into(),
+            ),
+            Value::String(
+                r#"0x0000000000000000000000000000000000000000000000000000000000000458"#.into(),
+            ),
         ]));
         transport.add_response(Value::Array(vec![Value::String(
             r#"0x0000000000000000000000000000000000000000000000000000000000000459"#.into(),
@@ -426,7 +440,11 @@ mod tests {
 
             // when
             let filter = eth.create_blocks_filter().wait().unwrap();
-            filter.stream(Duration::from_secs(0)).take(4).collect().wait()
+            filter
+                .stream(Duration::from_secs(0))
+                .take(4)
+                .collect()
+                .wait()
         };
 
         // then

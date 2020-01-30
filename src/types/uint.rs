@@ -1,4 +1,6 @@
-pub use ethereum_types::{BigEndianHash, Bloom as H2048, H128, H160, H256, H512, H520, H64, U128, U256, U64};
+pub use ethereum_types::{
+    BigEndianHash, Bloom as H2048, H128, H160, H256, H512, H520, H64, U128, U256, U64,
+};
 
 #[cfg(test)]
 mod tests {
@@ -101,7 +103,8 @@ mod tests {
 
     #[test]
     fn should_deserialize_hash_correctly() {
-        let deserialized1: H128 = serde_json::from_str(r#""0x00000000000000000000000a00010f00""#).unwrap();
+        let deserialized1: H128 =
+            serde_json::from_str(r#""0x00000000000000000000000a00010f00""#).unwrap();
 
         assert_eq!(deserialized1, H128::from_low_u64_be(0xa00010f00));
     }

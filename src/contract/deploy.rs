@@ -45,7 +45,12 @@ impl<T: Transport> Builder<T> {
     }
 
     /// Execute deployment passing code and contructor parameters.
-    pub fn execute<P, V>(self, code: V, params: P, from: Address) -> Result<PendingContract<T>, ethabi::Error>
+    pub fn execute<P, V>(
+        self,
+        code: V,
+        params: P,
+        from: Address,
+    ) -> Result<PendingContract<T>, ethabi::Error>
     where
         P: Tokenize,
         V: AsRef<str>,
@@ -58,9 +63,10 @@ impl<T: Transport> Builder<T> {
 
         for (lib, address) in self.linker {
             if lib.len() > 38 {
-                return Err(
-                    ethabi::ErrorKind::Msg(String::from("The library name should be under 39 characters.")).into(),
-                );
+                return Err(ethabi::ErrorKind::Msg(String::from(
+                    "The library name should be under 39 characters.",
+                ))
+                .into());
             }
             let replace = format!("__{:_<38}", lib); // This makes the required width 38 characters and will pad with `_` to match it.
             let address: String = address.as_ref().to_hex();
@@ -72,7 +78,10 @@ impl<T: Transport> Builder<T> {
         let params = params.into_tokens();
         let data = match (abi.constructor(), params.is_empty()) {
             (None, false) => {
-                return Err(ethabi::ErrorKind::Msg("Constructor is not defined in the ABI.".into()).into());
+                return Err(ethabi::ErrorKind::Msg(
+                    "Constructor is not defined in the ABI.".into(),
+                )
+                .into());
             }
             (None, true) => code,
             (Some(constructor), _) => constructor.encode_input(code, &params)?,
@@ -166,7 +175,11 @@ mod tests {
         transport.add_response(receipt);
 
         {
-            let builder = Contract::deploy(api::Eth::new(&transport), include_bytes!("./res/token.json")).unwrap();
+            let builder = Contract::deploy(
+                api::Eth::new(&transport),
+                include_bytes!("./res/token.json"),
+            )
+            .unwrap();
 
             // when
             builder
@@ -174,7 +187,12 @@ mod tests {
                 .confirmations(1)
                 .execute(
                     "0x01020304",
-                    (U256::from(1_000_000), "My Token".to_owned(), 3u64, "MT".to_owned()),
+                    (
+                        U256::from(1_000_000),
+                        "My Token".to_owned(),
+                        3u64,
+                        "MT".to_owned(),
+                    ),
                     Address::from_low_u64_be(5),
                 )
                 .unwrap()
@@ -267,7 +285,11 @@ mod tests {
                 linker
             })
             .unwrap();
-            let _ = builder.execute(main_code, (), Address::zero()).unwrap().wait().unwrap();
+            let _ = builder
+                .execute(main_code, (), Address::zero())
+                .unwrap()
+                .wait()
+                .unwrap();
         }
 
         transport.assert_request("eth_sendTransaction", &[
@@ -288,5 +310,4 @@ mod tests {
         );
         transport.assert_no_more_requests();
     }
-
 }

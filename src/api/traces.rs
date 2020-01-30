@@ -1,6 +1,8 @@
 use crate::api::Namespace;
 use crate::helpers::{self, CallFuture};
-use crate::types::{BlockNumber, BlockTrace, Bytes, CallRequest, Index, Trace, TraceFilter, TraceType, H256};
+use crate::types::{
+    BlockNumber, BlockTrace, Bytes, CallRequest, Index, Trace, TraceFilter, TraceType, H256,
+};
 use crate::Transport;
 
 /// `Trace` namespace
@@ -33,18 +35,32 @@ impl<T: Transport> Traces<T> {
         let req = helpers::serialize(&req);
         let block = helpers::serialize(&block.unwrap_or(BlockNumber::Latest));
         let trace_type = helpers::serialize(&trace_type);
-        CallFuture::new(self.transport.execute("trace_call", vec![req, trace_type, block]))
+        CallFuture::new(
+            self.transport
+                .execute("trace_call", vec![req, trace_type, block]),
+        )
     }
 
     /// Traces a call to `eth_sendRawTransaction` without making the call, returning the traces
-    pub fn raw_transaction(&self, data: Bytes, trace_type: Vec<TraceType>) -> CallFuture<BlockTrace, T::Out> {
+    pub fn raw_transaction(
+        &self,
+        data: Bytes,
+        trace_type: Vec<TraceType>,
+    ) -> CallFuture<BlockTrace, T::Out> {
         let data = helpers::serialize(&data);
         let trace_type = helpers::serialize(&trace_type);
-        CallFuture::new(self.transport.execute("trace_rawTransaction", vec![data, trace_type]))
+        CallFuture::new(
+            self.transport
+                .execute("trace_rawTransaction", vec![data, trace_type]),
+        )
     }
 
     /// Replays a transaction, returning the traces
-    pub fn replay_transaction(&self, hash: H256, trace_type: Vec<TraceType>) -> CallFuture<BlockTrace, T::Out> {
+    pub fn replay_transaction(
+        &self,
+        hash: H256,
+        trace_type: Vec<TraceType>,
+    ) -> CallFuture<BlockTrace, T::Out> {
         let hash = helpers::serialize(&hash);
         let trace_type = helpers::serialize(&trace_type);
         CallFuture::new(
@@ -101,7 +117,8 @@ mod tests {
 
     use crate::api::Namespace;
     use crate::types::{
-        Address, BlockNumber, BlockTrace, Bytes, CallRequest, Trace, TraceFilterBuilder, TraceType, H256,
+        Address, BlockNumber, BlockTrace, Bytes, CallRequest, Trace, TraceFilterBuilder, TraceType,
+        H256,
     };
 
     use super::Traces;

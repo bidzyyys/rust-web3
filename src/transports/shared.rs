@@ -50,15 +50,17 @@ impl EventLoopHandle {
             }
         });
 
-        rx.recv().expect("Thread is always spawned.").map(|(http, remote)| {
-            (
-                EventLoopHandle {
-                    thread: Some(eloop),
-                    remote: Some(Remote { remote, done }),
-                },
-                http,
-            )
-        })
+        rx.recv()
+            .expect("Thread is always spawned.")
+            .map(|(http, remote)| {
+                (
+                    EventLoopHandle {
+                        thread: Some(eloop),
+                        remote: Some(Remote { remote, done }),
+                    },
+                    http,
+                )
+            })
     }
 
     /// Returns event loop remote.
@@ -159,7 +161,9 @@ where
                 }
                 RequestState::WaitingForResponse(ref mut rx) => {
                     log::trace!("[{}] Checking response.", self.id);
-                    let result = try_ready!(rx.poll().map_err(|_| Error::Io(::std::io::ErrorKind::TimedOut.into())));
+                    let result = try_ready!(rx
+                        .poll()
+                        .map_err(|_| Error::Io(::std::io::ErrorKind::TimedOut.into())));
                     log::trace!("[{}] Extracting result.", self.id);
                     return result.and_then(|x| extract(x)).map(futures::Async::Ready);
                 }
