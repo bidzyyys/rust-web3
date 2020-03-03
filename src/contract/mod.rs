@@ -119,6 +119,14 @@ impl<T: Transport> Contract<T> {
             .function(func)
             .and_then(|function| function.encode_input(&params.into_tokens()))
     }
+
+    /// Decode ABI
+    pub fn decode(&self, func: &str, data: &[u8]) -> Result<Vec<ethabi::Token>, ethabi::Error> {
+        self.abi
+            .function(func)
+            .and_then(|function| function.decode_output(data))
+    }
+
     /// Execute a contract function
     pub fn call<P>(
         &self,
