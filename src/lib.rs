@@ -30,6 +30,7 @@ pub mod confirm;
 
 pub use crate::api::Web3;
 pub use crate::error::Error;
+pub use crate::confirm::{TransactionReceiptBlockNumber, TransactionReceiptBlockNumberCheck}; 
 
 /// RPC result
 pub type Result<T> = Box<dyn futures::Future<Item = T, Error = Error> + Send + 'static>;

@@ -183,7 +183,8 @@ where
     Confirmations::new(eth, eth_filter, poll_interval, confirmations, check)
 }
 
-struct TransactionReceiptBlockNumber<T: Transport> {
+/// Confirmation check for transactions
+pub struct TransactionReceiptBlockNumber<T: Transport> {
     future: CallFuture<Option<TransactionReceipt>, T::Out>,
 }
 
@@ -197,13 +198,15 @@ impl<T: Transport> Future for TransactionReceiptBlockNumber<T> {
     }
 }
 
-struct TransactionReceiptBlockNumberCheck<T: Transport> {
+/// Checks whether transaction has expected number of confirmations
+pub struct TransactionReceiptBlockNumberCheck<T: Transport> {
     eth: Eth<T>,
     hash: H256,
 }
 
 impl<T: Transport> TransactionReceiptBlockNumberCheck<T> {
-    fn new(eth: Eth<T>, hash: H256) -> Self {
+    /// Creates new check
+    pub fn new(eth: Eth<T>, hash: H256) -> Self {
         TransactionReceiptBlockNumberCheck { eth, hash }
     }
 }
